@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: linkvault-server
+  profiles:
+    active: dev
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: ${LINKVAULT_MAX_FILE_SIZE:2GB}
+      max-request-size: ${LINKVAULT_MAX_REQUEST_SIZE:2GB}
+
+server:
+  port: 8080
+  tomcat:
+    max-swallow-size: -1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+aj:
+  captcha:
+    type: blockPuzzle
+    cache-type: local
+    water-mark: ''
+    slip-offset: 5
+    aes-status: false
+
+linkvault:
+  security:
+    jwt-secret: ${LINKVAULT_JWT_SECRET:dev-secret-change-me-dev-secret-change-me}
+    access-token-ttl: ${LINKVAULT_ACCESS_TOKEN_TTL:PT30M}
+    refresh-token-ttl: ${LINKVAULT_REFRESH_TOKEN_TTL:P3650D}
+  storage:
+    endpoint: ${LINKVAULT_MINIO_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${LINKVAULT_MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
+    access-key: ${LINKVAULT_MINIO_ACCESS_KEY:linkvault}
+    secret-key: ${LINKVAULT_MINIO_SECRET_KEY:linkvault-secret}
+    bucket: ${LINKVAULT_MINIO_BUCKET:linkvault}
+    initialize-bucket: ${LINKVAULT_MINIO_INITIALIZE_BUCKET:true}
+  uploads:
+    temp-dir: ${LINKVAULT_UPLOAD_TEMP_DIR:./data/uploads-temp}

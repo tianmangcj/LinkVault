@@ -1,0 +1,6 @@
+{
+  "scheme": "http",
+  "host": "localhost",
+  "port": 8080,
+  "apiPath": "/api/v1"
+}

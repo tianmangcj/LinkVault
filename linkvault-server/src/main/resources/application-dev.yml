@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: ${LINKVAULT_DATASOURCE_URL:jdbc:postgresql://localhost:5432/linkvault}
+    username: ${LINKVAULT_DATASOURCE_USERNAME:linkvault}
+    password: ${LINKVAULT_DATASOURCE_PASSWORD:linkvault}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  data:
+    redis:
+      host: ${LINKVAULT_REDIS_HOST:localhost}
+      port: ${LINKVAULT_REDIS_PORT:6379}
+
+logging:
+  level:
+    com.linkvault: DEBUG

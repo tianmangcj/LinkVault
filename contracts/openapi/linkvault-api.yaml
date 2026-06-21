@@ -1,0 +1,1036 @@
+openapi: 3.1.0
+info:
+  title: LinkVault 1.0 API
+  version: 1.0.0
+  description: Contract shared by LinkVault Client and LinkVault Server.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+paths:
+  /health:
+    get:
+      summary: Check server health
+      operationId: getHealth
+      tags:
+        - System
+      responses:
+        "200":
+          description: Server is reachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthApiResponse"
+  /auth/login:
+    post:
+      summary: Sign in with account, password, and captcha verification
+      operationId: login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files:
+    get:
+      summary: List file nodes in a folder
+      operationId: listFiles
+      tags:
+        - Files
+      parameters:
+        - name: parentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          required: false
+        - name: type
+          in: query
+          description: Filter root or folder children by node type.
+          schema:
+            type: string
+            enum:
+              - file
+              - folder
+          required: false
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: File nodes page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileListApiResponse"
+  /files/{fileId}/rename:
+    patch:
+      summary: Rename a file node
+      operationId: renameFile
+      tags:
+        - Files
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameFileRequest"
+      responses:
+        "200":
+          description: Renamed file node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileNodeApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files/{fileId}/move:
+    patch:
+      summary: Move a file node to another folder
+      operationId: moveFile
+      tags:
+        - Files
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveFileRequest"
+      responses:
+        "200":
+          description: Moved file node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileNodeApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files/{fileId}/copy:
+    post:
+      summary: Copy a file node to another folder
+      operationId: copyFile
+      tags:
+        - Files
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CopyFileRequest"
+      responses:
+        "200":
+          description: Copied file node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileNodeApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files/batch-move:
+    patch:
+      summary: Move up to 10 file nodes to another folder
+      operationId: moveFilesBatch
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchMoveFileRequest"
+      responses:
+        "200":
+          description: Batch move result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchFileActionApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files/batch-copy:
+    post:
+      summary: Copy up to 10 file nodes to another folder
+      operationId: copyFilesBatch
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchMoveFileRequest"
+      responses:
+        "200":
+          description: Batch copy result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchFileActionApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /files/batch-recycle:
+    post:
+      summary: Move up to 10 file nodes to recycle bin
+      operationId: moveFilesToRecycleBinBatch
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchFileIdsRequest"
+      responses:
+        "200":
+          description: Batch recycle result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchFileActionApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /recycle-bin:
+    get:
+      summary: List recycle bin root records
+      operationId: listRecycleBin
+      tags:
+        - Recycle Bin
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Recycle bin records page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileListApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Permanently delete all recycle bin root records
+      operationId: emptyRecycleBin
+      tags:
+        - Recycle Bin
+      responses:
+        "200":
+          description: Recycle bin emptied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /recycle-bin/{fileId}/restore:
+    post:
+      summary: Restore a recycled file node
+      operationId: restoreRecycledFile
+      tags:
+        - Recycle Bin
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestoreFileRequest"
+      responses:
+        "200":
+          description: Restored file node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileNodeApiResponse"
+        "409":
+          description: Original path unavailable or target name conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /recycle-bin/{fileId}:
+    delete:
+      summary: Permanently delete a recycled file node
+      operationId: purgeRecycledFile
+      tags:
+        - Recycle Bin
+      parameters:
+        - $ref: "#/components/parameters/FileId"
+      responses:
+        "200":
+          description: Recycled file node purged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /downloads/batch/stream:
+    post:
+      summary: Download up to 10 file nodes as a zip archive
+      operationId: downloadFilesBatchStream
+      tags:
+        - Downloads
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchDownloadRequest"
+      responses:
+        "200":
+          description: Zip archive containing selected file nodes
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /transfer-tasks/resume-all:
+    post:
+      summary: Resume all paused transfer tasks
+      operationId: resumeAllTransferTasks
+      tags:
+        - Transfer Tasks
+      responses:
+        "200":
+          description: All paused transfer tasks were resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /transfer-tasks/pause-all:
+    post:
+      summary: Pause all active or waiting transfer tasks
+      operationId: pauseAllTransferTasks
+      tags:
+        - Transfer Tasks
+      responses:
+        "200":
+          description: All active or waiting transfer tasks were paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /devices:
+    get:
+      summary: List signed-in devices
+      operationId: listDevices
+      tags:
+        - Devices
+      responses:
+        "200":
+          description: Active devices for current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceListApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /devices/current:
+    post:
+      summary: Report the current device metadata
+      operationId: reportCurrentDevice
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportDeviceRequest"
+      responses:
+        "200":
+          description: Current device metadata updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /devices/{deviceId}:
+    delete:
+      summary: Remove a signed-in device
+      operationId: revokeDevice
+      tags:
+        - Devices
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Device removed and its sessions revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me:
+    get:
+      summary: Get current user profile
+      operationId: getCurrentUser
+      tags:
+        - Users
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete current user account
+      operationId: deleteCurrentUser
+      tags:
+        - Users
+      responses:
+        "200":
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me/username:
+    patch:
+      summary: Update current username
+      operationId: updateUsername
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsernameRequest"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me/avatar:
+    patch:
+      summary: Update current user avatar image
+      operationId: updateAvatar
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAvatarRequest"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me/password:
+    patch:
+      summary: Change current user password
+      operationId: changePassword
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoidApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /uploads/direct:
+    post:
+      summary: Upload a single file directly into root storage or a folder
+      operationId: directUploadFile
+      tags:
+        - Uploads
+      parameters:
+        - name: parentId
+          in: query
+          description: Omit this to upload into the standalone root file area.
+          schema:
+            type: string
+            format: uuid
+          required: false
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Uploaded file node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileNodeApiResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  parameters:
+    FileId:
+      name: fileId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorApiResponse"
+  schemas:
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          examples:
+            - validation_error
+        message:
+          type: string
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - checkedAt
+      properties:
+        status:
+          type: string
+          examples:
+            - UP
+        service:
+          type: string
+          examples:
+            - linkvault-server
+        checkedAt:
+          type: string
+          format: date-time
+    LoginRequest:
+      type: object
+      required:
+        - account
+        - password
+        - captchaVerification
+      properties:
+        account:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        captchaVerification:
+          type: string
+        deviceName:
+          type: string
+        platform:
+          type: string
+        appVersion:
+          type: string
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - accessTokenExpiresAt
+        - refreshTokenExpiresAt
+        - user
+        - device
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        device:
+          $ref: "#/components/schemas/Device"
+    UserProfile:
+      type: object
+      required:
+        - id
+        - username
+        - displayName
+        - avatarText
+        - role
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type:
+            - string
+            - "null"
+        displayName:
+          type: string
+        avatarText:
+          type: string
+        avatarImageData:
+          type:
+            - string
+            - "null"
+          description: Data URL for an image avatar.
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Device:
+      type: object
+      required:
+        - id
+        - deviceName
+        - platform
+        - lastSeenAt
+        - current
+      properties:
+        id:
+          type: string
+          format: uuid
+        deviceName:
+          type: string
+        platform:
+          type: string
+          enum:
+            - ANDROID
+            - WINDOWS
+            - IOS
+            - MACOS
+            - LINUX
+            - WEB
+            - UNKNOWN
+        appVersion:
+          type:
+            - string
+            - "null"
+        lastIp:
+          type:
+            - string
+            - "null"
+        lastSeenAt:
+          type: string
+          format: date-time
+        current:
+          type: boolean
+    ReportDeviceRequest:
+      type: object
+      properties:
+        deviceName:
+          type: string
+        platform:
+          type: string
+        appVersion:
+          type: string
+    FileNode:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - sizeBytes
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - file
+            - folder
+        status:
+          type: string
+          enum:
+            - active
+            - recycled
+            - purged
+        sizeBytes:
+          type: integer
+          format: int64
+        mimeType:
+          type:
+            - string
+            - "null"
+        sha256:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        recycledAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+    RenameFileRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+    MoveFileRequest:
+      type: object
+      properties:
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+    CopyFileRequest:
+      type: object
+      properties:
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+    RestoreFileRequest:
+      type: object
+      properties:
+        useOriginalPath:
+          type: boolean
+          default: true
+          description: When true or omitted, restore to the original path. When false, restore to parentId or root when parentId is null.
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+    BatchFileIdsRequest:
+      type: object
+      required:
+        - fileIds
+      properties:
+        fileIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+    BatchMoveFileRequest:
+      type: object
+      required:
+        - fileIds
+      properties:
+        fileIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+    BatchDownloadRequest:
+      type: object
+      required:
+        - fileIds
+      properties:
+        fileIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+    BatchFileActionItem:
+      type: object
+      required:
+        - fileId
+        - success
+      properties:
+        fileId:
+          type: string
+          format: uuid
+        name:
+          type:
+            - string
+            - "null"
+        success:
+          type: boolean
+        node:
+          oneOf:
+            - $ref: "#/components/schemas/FileNode"
+            - type: "null"
+        errorCode:
+          type:
+            - string
+            - "null"
+        errorMessage:
+          type:
+            - string
+            - "null"
+    BatchFileActionResult:
+      type: object
+      required:
+        - total
+        - succeeded
+        - failed
+        - items
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        succeeded:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchFileActionItem"
+    UpdateUsernameRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+    UpdateAvatarRequest:
+      type: object
+      required:
+        - avatarImageData
+      properties:
+        avatarImageData:
+          type: string
+          description: Must be a data:image/...;base64,... value.
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+        - confirmPassword
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+        confirmPassword:
+          type: string
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - perPage
+        - total
+      properties:
+        page:
+          type: integer
+        perPage:
+          type: integer
+        total:
+          type: integer
+    HealthApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/HealthResponse"
+    AuthApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/AuthResponse"
+    UserProfileApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/UserProfile"
+    DeviceListApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Device"
+    DeviceApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Device"
+    FileListApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/FileNode"
+            meta:
+              $ref: "#/components/schemas/PaginationMeta"
+    FileNodeApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/FileNode"
+    BatchFileActionApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/BatchFileActionResult"
+    VoidApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: "null"
+    ErrorApiResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            error:
+              $ref: "#/components/schemas/ApiError"
+    ApiEnvelope:
+      type: object
+      required:
+        - success
+        - timestamp
+      properties:
+        success:
+          type: boolean
+        data: {}
+        error:
+          oneOf:
+            - $ref: "#/components/schemas/ApiError"
+            - type: "null"
+        timestamp:
+          type: string
+          format: date-time

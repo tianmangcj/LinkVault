@@ -1,0 +1,90 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+.directory
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+
+# Logs and local environment
+*.log
+*.pid
+*.tmp
+*.bak
+*.orig
+.env.local
+.env
+.env.*
+!.env.example
+.agents/
+.claude/
+/server.json
+
+# Java / Maven / Spring Boot
+target/
+.m2/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/timing.properties
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/gradlew
+!**/gradlew.bat
+**/data/
+
+# Flutter / Dart
+.appdata/
+.pub-cache/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+coverage/
+*.symbols
+app.*.symbols
+app.*.map.json
+
+# Flutter platforms not shipped by LinkVault 1.0
+linkvault-client/ios/
+linkvault-client/linux/
+linkvault-client/macos/
+linkvault-client/web/
+
+# Android
+**/android/.gradle/
+**/android/.kotlin/
+**/android/local.properties
+**/android/.codeartsdoer/
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/app/*.jks
+**/android/key.properties
+
+# Windows builds
+**/windows/flutter/ephemeral/
+**/windows/runner/Debug/
+**/windows/runner/Release/
+
+# Flutter platform generated intermediates
+**/ios/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+
+# Local worktrees and generated artifacts
+.worktrees/
+worktrees/
+dist/
+tmp/
+temp/
