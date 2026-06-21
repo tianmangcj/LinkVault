@@ -55,6 +55,9 @@ LinkVault/
     infra/docker/
       docker-compose.yml
       .env.example
+    server.env                  # 本地端口、依赖账号和启动配置
+    start-server.bat            # Windows 一键启动后端
+    start-server.sh             # Linux/macOS 一键启动后端
     Dockerfile
 ```
 
@@ -162,33 +165,45 @@ flowchart TB
 - JDK 21
 - Maven 3.9 或 IDE 自带 Maven
 - Flutter SDK
-- Docker Desktop
+- Docker Desktop 或 Docker Engine
 
-### 启动服务端依赖
+### 配置并启动服务端
 
-在 `linkvault-server` 目录启动 PostgreSQL、Redis、MinIO 和 Bucket 初始化任务：
+后端统一读取 `linkvault-server/server.env`。修改这个文件即可调整 Spring Boot 和 Docker 依赖的本地端口：
+
+```env
+LINKVAULT_SERVER_PORT=8080
+LINKVAULT_POSTGRES_HOST_PORT=5432
+LINKVAULT_REDIS_HOST_PORT=6379
+LINKVAULT_MINIO_API_HOST_PORT=9000
+LINKVAULT_MINIO_CONSOLE_HOST_PORT=9001
+```
+
+Windows：
 
 ```powershell
-docker compose -f infra/docker/docker-compose.yml up -d postgres redis minio minio-init
+cd linkvault-server
+.\start-server.bat
 ```
+
+Linux / macOS：
+
+```sh
+cd linkvault-server
+sh start-server.sh
+```
+
+脚本会启动 PostgreSQL、Redis、MinIO 和 Bucket 初始化任务，然后运行 `mvn spring-boot:run`。如果本机没有全局 Maven，请先安装 Maven，或在 IDE 中打开 `linkvault-server` 并运行 Spring Boot 应用。
 
 默认地址：
 
+- API: `http://localhost:8080`
 - PostgreSQL: `localhost:5432`
 - Redis: `localhost:6379`
 - MinIO API: `http://localhost:9000`
 - MinIO Console: `http://localhost:9001`
 - MinIO 用户名/密码：`linkvault` / `linkvault-secret`
 - MinIO Bucket: `linkvault`
-
-### 启动服务端
-
-```powershell
-cd linkvault-server
-mvn spring-boot:run
-```
-
-如果本机没有全局 Maven，请先安装 Maven，或在 IDE 中打开 `linkvault-server` 并运行 Spring Boot 应用。
 
 健康检查：
 
@@ -259,10 +274,10 @@ flutter create --platforms=android,windows --project-name linkvault_client --org
 在 `linkvault-server` 目录运行：
 
 ```powershell
-docker compose -f infra/docker/docker-compose.yml up --build
+docker compose --env-file server.env -f infra/docker/docker-compose.yml up --build
 ```
 
-该命令会启动 API、PostgreSQL、Redis、MinIO 和 Bucket 初始化任务。API 默认暴露在 `http://localhost:8080`。
+该命令会启动 API、PostgreSQL、Redis、MinIO 和 Bucket 初始化任务，并使用 `server.env` 中的端口配置。API 默认暴露在 `http://localhost:8080`，如修改 `LINKVAULT_SERVER_PORT` 则以 `server.env` 为准。
 
 ## 构建与测试
 

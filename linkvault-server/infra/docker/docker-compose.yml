@@ -12,33 +12,35 @@ services:
       minio-init:
         condition: service_completed_successfully
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      LINKVAULT_DATASOURCE_URL: jdbc:postgresql://postgres:5432/linkvault
-      LINKVAULT_DATASOURCE_USERNAME: linkvault
-      LINKVAULT_DATASOURCE_PASSWORD: linkvault
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      LINKVAULT_SERVER_PORT: ${LINKVAULT_SERVER_PORT:-8080}
+      LINKVAULT_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${LINKVAULT_POSTGRES_DB:-linkvault}
+      LINKVAULT_DATASOURCE_USERNAME: ${LINKVAULT_POSTGRES_USER:-linkvault}
+      LINKVAULT_DATASOURCE_PASSWORD: ${LINKVAULT_POSTGRES_PASSWORD:-linkvault}
       LINKVAULT_REDIS_HOST: redis
       LINKVAULT_REDIS_PORT: 6379
       LINKVAULT_MINIO_ENDPOINT: http://minio:9000
-      LINKVAULT_MINIO_PUBLIC_ENDPOINT: http://localhost:9000
-      LINKVAULT_MINIO_ACCESS_KEY: linkvault
-      LINKVAULT_MINIO_SECRET_KEY: linkvault-secret
-      LINKVAULT_MINIO_BUCKET: linkvault
+      LINKVAULT_MINIO_PUBLIC_ENDPOINT: http://localhost:${LINKVAULT_MINIO_API_HOST_PORT:-9000}
+      LINKVAULT_MINIO_ACCESS_KEY: ${LINKVAULT_MINIO_ACCESS_KEY:-linkvault}
+      LINKVAULT_MINIO_SECRET_KEY: ${LINKVAULT_MINIO_SECRET_KEY:-linkvault-secret}
+      LINKVAULT_MINIO_BUCKET: ${LINKVAULT_MINIO_BUCKET:-linkvault}
+      LINKVAULT_JWT_SECRET: ${LINKVAULT_JWT_SECRET:-dev-secret-change-me-dev-secret-change-me}
     ports:
-      - "8080:8080"
+      - "${LINKVAULT_SERVER_PORT:-8080}:${LINKVAULT_SERVER_PORT:-8080}"
 
   postgres:
     image: postgres:16-alpine
     container_name: linkvault-postgres
     environment:
-      POSTGRES_DB: linkvault
-      POSTGRES_USER: linkvault
-      POSTGRES_PASSWORD: linkvault
+      POSTGRES_DB: ${LINKVAULT_POSTGRES_DB:-linkvault}
+      POSTGRES_USER: ${LINKVAULT_POSTGRES_USER:-linkvault}
+      POSTGRES_PASSWORD: ${LINKVAULT_POSTGRES_PASSWORD:-linkvault}
     ports:
-      - "5432:5432"
+      - "${LINKVAULT_POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - linkvault-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U linkvault -d linkvault"]
+      test: ["CMD-SHELL", "pg_isready -U ${LINKVAULT_POSTGRES_USER:-linkvault} -d ${LINKVAULT_POSTGRES_DB:-linkvault}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -47,7 +49,7 @@ services:
     image: redis:7-alpine
     container_name: linkvault-redis
     ports:
-      - "6379:6379"
+      - "${LINKVAULT_REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - linkvault-redis-data:/data
     healthcheck:
@@ -61,11 +63,11 @@ services:
     container_name: linkvault-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: linkvault
-      MINIO_ROOT_PASSWORD: linkvault-secret
+      MINIO_ROOT_USER: ${LINKVAULT_MINIO_ACCESS_KEY:-linkvault}
+      MINIO_ROOT_PASSWORD: ${LINKVAULT_MINIO_SECRET_KEY:-linkvault-secret}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${LINKVAULT_MINIO_API_HOST_PORT:-9000}:9000"
+      - "${LINKVAULT_MINIO_CONSOLE_HOST_PORT:-9001}:9001"
     volumes:
       - linkvault-minio-data:/data
 
@@ -74,10 +76,14 @@ services:
     container_name: linkvault-minio-init
     depends_on:
       - minio
+    environment:
+      LINKVAULT_MINIO_ACCESS_KEY: ${LINKVAULT_MINIO_ACCESS_KEY:-linkvault}
+      LINKVAULT_MINIO_SECRET_KEY: ${LINKVAULT_MINIO_SECRET_KEY:-linkvault-secret}
+      LINKVAULT_MINIO_BUCKET: ${LINKVAULT_MINIO_BUCKET:-linkvault}
     entrypoint: >
       /bin/sh -c "
-      until mc alias set linkvault http://minio:9000 linkvault linkvault-secret; do sleep 2; done &&
-      mc mb --ignore-existing linkvault/linkvault
+      until mc alias set linkvault http://minio:9000 \"${LINKVAULT_MINIO_ACCESS_KEY:-linkvault}\" \"${LINKVAULT_MINIO_SECRET_KEY:-linkvault-secret}\"; do sleep 2; done &&
+      mc mb --ignore-existing linkvault/\"${LINKVAULT_MINIO_BUCKET:-linkvault}\"
       "
 
 volumes:
