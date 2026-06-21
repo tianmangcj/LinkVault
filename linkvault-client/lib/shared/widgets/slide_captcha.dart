@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_exceptions.dart';
 import '../../core/network/linkvault_models.dart';
 
 class SlideCaptcha extends StatefulWidget {
@@ -197,6 +198,10 @@ class _SlideCaptchaState extends State<SlideCaptcha> {
       return '正在加载验证码';
     }
     if (widget.error != null) {
+      if (normalizeApiError(widget.error!).message ==
+          networkConnectionFailureMessage) {
+        return networkConnectionFailureMessage;
+      }
       return '验证失败，请重试';
     }
     return '拖动滑块完成验证';

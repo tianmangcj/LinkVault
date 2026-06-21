@@ -6,7 +6,7 @@ import '../../core/network/api_exceptions.dart';
 
 enum AppNoticeType { info, success, warning, error }
 
-const connectionFailureSnackBarMessage = '连接失败，请稍微重试';
+const connectionFailureSnackBarMessage = networkConnectionFailureMessage;
 
 bool _noticeDialogOpen = false;
 DateTime? _lastCompactSnackBarAt;

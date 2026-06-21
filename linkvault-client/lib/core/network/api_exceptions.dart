@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-const networkConnectionFailureMessage = '网络连接失败，请稍后重试';
+const networkConnectionFailureMessage = '网络异常，请稍后重试';
 const genericRequestFailureMessage = '请求失败，请稍后重试';
 
 abstract class ApiException implements Exception {
